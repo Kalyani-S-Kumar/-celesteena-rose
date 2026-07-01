@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For Celesteena 🌹</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000000;
+    --pink-hi:#ffe3f0;
+    --pink-light:#ff9dc4;
+    --pink-mid:#ff5fa2;
+    --pink-dark:#e0397b;
+    --pink-outline:#7a1440;
+    --leaf:#3f9142;
+    --leaf-light:#63c26b;
+    --leaf-dark:#153d1f;
+    --yellow:#ffe066;
+    --card-bg:#0d0d1a;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    background:var(--bg);
+    color:var(--pink-hi);
+    font-family:'Press Start 2P', monospace;
+    min-height:100%;
+    overflow-x:hidden;
+  }
+
+  body{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding:32px 16px 64px;
+    position:relative;
+  }
+
+  /* ---------- CRT / scanline retro overlay ---------- */
+  .crt{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:50;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.035) 0px,
+        rgba(255,255,255,0.035) 1px,
+        transparent 2px,
+        transparent 3px
+      );
+    mix-blend-mode:overlay;
+  }
+  .vignette{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:49;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.65) 100%);
+  }
+
+  /* ---------- falling petals & sparkles ---------- */
+  .fx{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:3;
+  }
+  .petal, .spark{
+    position:absolute;
+    top:-12px;
+    image-rendering:pixelated;
+    will-change:transform;
+  }
+  .petal{
+    background:var(--pink-light);
+    border:2px solid var(--pink-outline);
+    border-radius:0 60% 0 60%;
+  }
+  .spark{
+    background:var(--yellow);
+    clip-path:polygon(50% 0%,63% 37%,100% 50%,63% 63%,50% 100%,37% 63%,0% 50%,37% 37%);
+  }
+  @keyframes fall{
+    0%{ transform:translateY(-5vh) translateX(0) rotate(0deg); }
+    50%{ transform:translateY(50vh) translateX(20px) rotate(180deg); }
+    100%{ transform:translateY(108vh) translateX(-10px) rotate(360deg); }
+  }
+  @keyframes pop{
+    0%{ transform:translate(-50%,-50%) scale(0); opacity:1; }
+    70%{ transform:translate(-50%,-50%) scale(1.4); opacity:1; }
+    100%{ transform:translate(-50%,-50%) scale(0.2); opacity:0; }
+  }
+
+  /* ---------- header ---------- */
+  .title{
+    text-align:center;
+    font-size:clamp(11px, 3.6vw, 18px);
+    line-height:2;
+    color:var(--pink-hi);
+    text-shadow:
+      2px 2px 0 var(--pink-outline),
+      0 0 12px var(--pink-mid);
+    z-index:4;
+    margin:8px 0 4px;
+    letter-spacing:1px;
+  }
+  .subtitle{
+    font-size:clamp(7px, 2.2vw, 10px);
+    color:var(--yellow);
+    text-align:center;
+    letter-spacing:1px;
+    z-index:4;
+    margin-bottom:24px;
+    text-shadow:1px 1px 0 #7a5f00;
+  }
+
+  /* ---------- rose stage ---------- */
+  .rose-wrap{
+    position:relative;
+    z-index:4;
+    cursor:pointer;
+    padding:12px;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #rose{
+    width:min(78vw, 340px);
+    aspect-ratio:34 / 42;
+    height:auto;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+    filter:drop-shadow(0 0 18px rgba(255, 95, 162, 0.0));
+    transition:filter 1s ease;
+  }
+  .rose-wrap.grown #rose{
+    filter:drop-shadow(0 0 22px rgba(255, 95, 162, 0.55));
+    animation:bob 3.4s ease-in-out infinite;
+  }
+  @keyframes bob{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-6px); }
+  }
+
+  .hint{
+    position:absolute;
+    left:50%;
+    bottom:-2px;
+    transform:translate(-50%, 100%);
+    white-space:nowrap;
+    font-size:clamp(7px, 2vw, 9px);
+    color:var(--yellow);
+    animation:blink 1.1s steps(2, start) infinite;
+    text-shadow:1px 1px 0 #7a5f00;
+  }
+  .hint.hide{ display:none; }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* click-burst sparkle */
+  .burst{
+    position:fixed;
+    width:14px;
+    height:14px;
+    background:var(--yellow);
+    clip-path:polygon(50% 0%,63% 37%,100% 50%,63% 63%,50% 100%,37% 63%,0% 50%,37% 37%);
+    pointer-events:none;
+    z-index:60;
+    animation:pop .6s ease-out forwards;
+  }
+
+  /* ---------- pixel-bordered card ---------- */
+  .card{
+    max-width:460px;
+    width:100%;
+    margin:28px auto 0;
+    padding:22px 18px;
+    background:var(--card-bg);
+    border:4px solid #ffffff;
+    box-shadow:
+      0 0 0 4px #000000,
+      0 0 0 8px var(--pink-mid),
+      0 0 0 12px #000000;
+    text-align:center;
+    z-index:4;
+    position:relative;
+    opacity:0;
+    transform:translateY(24px);
+    transition:opacity .9s ease, transform .9s ease;
+  }
+  .card.show{
+    opacity:1;
+    transform:translateY(0);
+  }
+  .card-eyebrow{
+    font-size:9px;
+    color:var(--yellow);
+    letter-spacing:2px;
+    margin-bottom:16px;
+    text-shadow:1px 1px 0 #7a5f00;
+  }
+  .card-body{
+    font-size:11px;
+    line-height:2.1;
+    color:var(--pink-hi);
+  }
+  .card-body strong{ color:var(--yellow); }
+  .card-sign{
+    margin-top:18px;
+    font-size:10px;
+    color:var(--pink-light);
+  }
+  .heart-row{
+    margin-top:16px;
+    font-size:12px;
+    letter-spacing:6px;
+    color:var(--pink-mid);
+  }
+
+  /* ---------- sound toggle ---------- */
+  .sound-btn{
+    position:fixed;
+    top:14px;
+    right:14px;
+    z-index:70;
+    background:#000;
+    color:var(--pink-hi);
+    border:3px solid var(--pink-mid);
+    font-family:'Press Start 2P', monospace;
+    font-size:12px;
+    padding:8px 10px;
+    cursor:pointer;
+    image-rendering:pixelated;
+  }
+  .sound-btn:active{ transform:translateY(1px); }
+
+  footer{
+    z-index:4;
+    margin-top:36px;
+    font-size:7px;
+    color:#555;
+    text-align:center;
+    letter-spacing:1px;
+  }
+
+  @media (max-width:420px){
+    .card{ padding:18px 12px; }
+    .card-body{ font-size:10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="crt"></div>
+<div class="vignette"></div>
+<div class="fx" id="fx"></div>
+
+<button class="sound-btn" id="soundBtn" title="Toggle sound">🔊</button>
+
+<h1 class="title">✿ A PIXEL ROSE ✿<br>FOR CELESTEENA</h1>
+<p class="subtitle">PRESS START TO GROW SOMETHING PRETTY</p>
+
+<div class="rose-wrap" id="roseWrap">
+  <canvas id="rose"></canvas>
+  <div class="hint" id="hint">▼ TAP THE ROSE ▼</div>
+</div>
+
+<div class="card" id="card">
+  <div class="card-eyebrow">❀ MESSAGE UNLOCKED ❀</div>
+  <div class="card-body">
+    <!-- ✏️ EDIT THIS MESSAGE TO PERSONALIZE IT FOR CELESTEENA ✏️ -->
+    Every pixel of this rose was placed<br>
+    just for <strong>you</strong>, Celesteena.<br><br>
+    Like this little garden, some things<br>
+    are worth building one small piece<br>
+    at a time — with patience, care,<br>
+    and a whole lot of pink.<br><br>
+    You make ordinary days feel like<br>
+    <strong>bonus levels</strong>.
+  </div>
+  <div class="card-sign">— made with care, just for you</div>
+  <div class="heart-row">✿ ✿ ✿</div>
+</div>
+
+<footer>PRESS START 2P · 8-BIT GARDEN · NO GAME OVER</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     1) PIXEL ROSE — generated procedurally onto a low-res
+        canvas, then upscaled crisp via CSS pixelated rendering
+     ========================================================= */
+
+  const W = 34, H = 42;
+  const CX = 17, CY = 12, BASE_R = 10, AMP = 2.4, LOBES = 5;
+
+  const COL = {
+    outline:   '#7a1440',
+    dark:      '#e0397b',
+    mid:       '#ff5fa2',
+    light:     '#ff9dc4',
+    hi:        '#ffe3f0',
+    leafOutline:'#153d1f',
+    leaf:      '#3f9142',
+    leafLight: '#63c26b',
+    stemOutline:'#153d1f',
+    stem:      '#2e7d32'
+  };
+
+  function inLeaf(x, y, lx, ly, a, b, angleDeg){
+    const rad = angleDeg * Math.PI / 180;
+    const dx = x - lx, dy = y - ly;
+    const rx =  dx * Math.cos(rad) + dy * Math.sin(rad);
+    const ry = -dx * Math.sin(rad) + dy * Math.cos(rad);
+    const v = (rx*rx)/(a*a) + (ry*ry)/(b*b);
+    return { inside: v <= 1, v: v, ry: ry };
+  }
+
+  function buildGrid(){
+    const grid = [];
+    for (let y = 0; y < H; y++){
+      const row = [];
+      for (let x = 0; x < W; x++){
+        let cell = null;
+
+        // ---- flower head ----
+        const dx = x - CX, dy = y - CY;
+        const r = Math.sqrt(dx*dx + dy*dy);
+        const theta = Math.atan2(dy, dx);
+        const edgeR = BASE_R + AMP * Math.cos(LOBES * theta + 0.6);
+
+        if (r <= edgeR){
+          const ringPos = r / edgeR;
+          const swirlTheta = theta + r * 0.35;
+          const stripe = Math.floor(swirlTheta * 2.5 + ringPos * 6) % 2;
+
+          if (ringPos > 0.88){
+            cell = COL.outline;
+          } else if (stripe === 0){
+            cell = COL.mid;
+          } else {
+            cell = COL.dark;
+          }
+
+          if (dx < -2 && dy < -3 && ringPos < 0.55){
+            cell = (stripe === 0) ? COL.hi : COL.light;
+          }
+        }
+
+        // ---- stem ----
+        if (!cell && x >= 16 && x <= 17 && y >= 20 && y <= H - 1){
+          cell = (x === 16) ? COL.stemOutline : COL.stem;
+        }
+
+        // ---- leaves ----
+        if (!cell){
+          const lf = inLeaf(x, y, 9, 29, 7, 3, 25);
+          const rf = inLeaf(x, y, 25, 31, 7, 3, -25);
+          if (lf.inside){
+            cell = lf.v > 0.75 ? COL.leafOutline : (Math.abs(lf.ry) < 0.6 ? COL.leafLight : COL.leaf);
+          } else if (rf.inside){
+            cell = rf.v > 0.75 ? COL.leafOutline : (Math.abs(rf.ry) < 0.6 ? COL.leafLight : COL.leaf);
+          }
+        }
+
+        row.push(cell);
+      }
+      grid.push(row);
+    }
+    return grid;
+  }
+
+  function flattenGrid(grid){
+    const list = [];
+    for (let y = 0; y < H; y++){
+      for (let x = 0; x < W; x++){
+        if (grid[y][x]) list.push({ x: x, y: y, c: grid[y][x] });
+      }
+    }
+    return list;
+  }
+
+  const canvas = document.getElementById('rose');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  const grid = buildGrid();
+  const cells = flattenGrid(grid);
+  // Growth order: bottom (stem) first, flower head blooms last
+  const order = cells.slice().sort(function(a, b){
+    return (b.y - a.y) || (Math.random() - 0.5);
+  });
+
+  function drawCell(cell){
+    ctx.fillStyle = cell.c;
+    ctx.fillRect(cell.x, cell.y, 1, 1);
+  }
+
+  const roseWrap = document.getElementById('roseWrap');
+  const hint = document.getElementById('hint');
+  const card = document.getElementById('card');
+
+  let bloomed = false;
+
+  function bloom(){
+    ensureAudio();
+    if (bloomed){
+      burstAt(roseWrap);
+      return;
+    }
+    bloomed = true;
+    hint.classList.add('hide');
+
+    let i = 0;
+    const total = order.length;
+    const batch = Math.max(2, Math.ceil(total / 90));
+
+    function step(){
+      for (let k = 0; k < batch && i < total; k++, i++){
+        drawCell(order[i]);
+      }
+      if (i < total){
+        requestAnimationFrame(step);
+      } else {
+        onBloomDone();
+      }
+    }
+    step();
+    playJingle();
+  }
+
+  function onBloomDone(){
+    roseWrap.classList.add('grown');
+    card.classList.add('show');
+    intensifyFalling();
+  }
+
+  roseWrap.addEventListener('click', bloom);
+  roseWrap.addEventListener('touchstart', function(e){ e.preventDefault(); bloom(); }, { passive:false });
+  roseWrap.setAttribute('tabindex', '0');
+  roseWrap.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bloom(); }
+  });
+
+  function burstAt(el){
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    for (let i = 0; i < 6; i++){
+      const s = document.createElement('div');
+      s.className = 'burst';
+      const angle = (i / 6) * Math.PI * 2;
+      const dist = 30 + Math.random() * 20;
+      s.style.left = (cx + Math.cos(angle) * dist) + 'px';
+      s.style.top = (cy + Math.sin(angle) * dist) + 'px';
+      document.body.appendChild(s);
+      s.addEventListener('animationend', function(){ s.remove(); });
+    }
+  }
+
+  /* =========================================================
+     2) FALLING PIXEL PETALS & 4-POINT SPARKLES
+     ========================================================= */
+
+  const fx = document.getElementById('fx');
+  let spawnRate = 1000; // ms between spawns, sped up after bloom
+  let spawnTimer = null;
+
+  function spawnOne(){
+    const isPetal = Math.random() < 0.6;
+    const el = document.createElement('div');
+    el.className = isPetal ? 'petal' : 'spark';
+    const size = isPetal ? (6 + Math.random() * 6) : (5 + Math.random() * 5);
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.left = (Math.random() * 100) + 'vw';
+    el.style.opacity = (0.55 + Math.random() * 0.45).toFixed(2);
+    const dur = 9 + Math.random() * 9;
+    el.style.animation = 'fall ' + dur.toFixed(2) + 's linear forwards';
+    fx.appendChild(el);
+    el.addEventListener('animationend', function(){ el.remove(); });
+  }
+
+  function startFalling(){
+    if (spawnTimer) clearInterval(spawnTimer);
+    spawnTimer = setInterval(spawnOne, spawnRate);
+  }
+
+  function intensifyFalling(){
+    spawnRate = 420;
+    startFalling();
+    for (let i = 0; i < 10; i++){
+      setTimeout(spawnOne, i * 60);
+    }
+  }
+
+  // gentle initial drift before interaction
+  for (let i = 0; i < 8; i++){
+    setTimeout(spawnOne, i * 250);
+  }
+  startFalling();
+
+  /* =========================================================
+     3) TINY 8-BIT JINGLE (Web Audio API)
+     ========================================================= */
+
+  let audioCtx = null;
+  let soundOn = true;
+
+  function ensureAudio(){
+    if (!audioCtx){
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) { /* audio unsupported, fail silently */ }
+    } else if (audioCtx.state === 'suspended'){
+      audioCtx.resume();
+    }
+  }
+
+  function beep(freq, start, dur, vol){
+    if (!audioCtx || !soundOn) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = freq;
+    gain.gain.value = vol || 0.05;
+    osc.connect(gain).connect(audioCtx.destination);
+    const t0 = audioCtx.currentTime + start;
+    osc.start(t0);
+    gain.gain.setValueAtTime(vol || 0.05, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.stop(t0 + dur + 0.02);
+  }
+
+  function playJingle(){
+    if (!soundOn) return;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+    notes.forEach(function(f, idx){ beep(f, idx * 0.13, 0.16); });
+  }
+
+  const soundBtn = document.getElementById('soundBtn');
+  soundBtn.addEventListener('click', function(){
+    soundOn = !soundOn;
+    soundBtn.textContent = soundOn ? '🔊' : '🔇';
+    ensureAudio();
+  });
+
+})();
+</script>
+</body>
+</html>
